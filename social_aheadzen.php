@@ -51,6 +51,7 @@ function aheadzen_scripts_method() {
 	global $social_plugin_dir_url;
 	wp_enqueue_script('popupwindow',$social_plugin_dir_url.'/js/jquery.popupwindow.js',array( 'jquery' ));
 	//wp_enqueue_script('jquerysearchlist',$social_plugin_dir_url.'/js/list.js',array( 'jquery' ));
+	wp_enqueue_style('social-360', plugins_url( 'css/style.css', __FILE__ ) );
 }
 
 function aheadzen_social_template_include($template)
