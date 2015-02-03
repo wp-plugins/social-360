@@ -182,7 +182,7 @@ ul.invite_to_div li a{color: #000000;font-weight: bold;margin-left: 4px;opacity:
 			}
 			echo '</ul>';
 			
-			AheadDB::insert_social_contact($contacts); //insert data in to db
+			AheadDB::insert_social_contact_google($contacts); //insert data in to db
 			
 		
 
@@ -213,7 +213,7 @@ foreach($social_plugin_replace_constants as $key=>$val)
 </ul>
 
 </div>
-<div class="send_invite_list">
+<div class="send_invite_list" style="text-align: right">
 <input type="submit" id="submit-button" value="SEND">
 </div>
 <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>

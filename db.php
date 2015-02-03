@@ -31,11 +31,44 @@ class AheadDB
 	
 	}
 	
-	function insert_social_contact($contacts)
+	function insert_social_contact_eml($emails_arr)
 	{
+		global $wpdb,$contact_social_table,$contact_social_meta_table;
+		if($emails_arr)
+		{
+			$emails_str = '"'.implode('","',$emails_arr).'"';
+			$emails_db_arr = $wpdb->get_col("select email_id from $contact_social_table where email_id in ($emails_str)");
+			if($emails_db_arr){
+				$emails_res_arr1 = array_intersect($emails_arr,$emails_db_arr);
+				$emails_res_arr = array_diff($emails_arr, $emails_res_arr1);
+			}else{
+				$emails_res_arr = $emails_arr;
+			}
+			
+			if($emails_res_arr)
+			{
+				for($e=0;$e<count($emails_res_arr);$e++)
+				{
+					$last_contact_id = 0;
+					$email = $emails_res_arr[$e];
+					if($email){
+						$wpdb->insert( 
+							$contact_social_table, 
+							array('email_id' => $email), 
+							array('%s') 
+						);
+						$last_contact_id = $wpdb->insert_id;
+					}
+				}
+			}
+		}
+	}
+	
+	function insert_social_contact_google($contacts)
+	{
+		global $wpdb,$contact_social_table,$contact_social_meta_table;
 		if(get_option('aheadzen_google_store_db'))
 		{
-			global $wpdb,$contact_social_table,$contact_social_meta_table;
 			if($contacts)
 			{
 				$emails_arr = array();

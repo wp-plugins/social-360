@@ -4,7 +4,7 @@ Plugin Name: Social 360 Plugin
 Plugin URI: http://aheadzen.com/
 Description: The plugin add social invitation link by Shotcode like [SociaPlugin google=1]
 Author: Aheadzen Team  | <a href="options-general.php?page=social_contacts" target="_blank">Plugin Settings</a>
-Version: 1.0.0
+Version: 1.0.1
 Author URI: http://aheadzen.com/
 
 License: GNU General Public License v3.0
@@ -32,6 +32,7 @@ $social_replace_constants_key = array('%%INVITERNAME%%','%%SITENAME%%');
 include_once('db.php');
 include_once('gmail.php');
 include_once('facebook.php');
+include_once('send_email.php');
 include_once('twitter/twitter.php');
 
 if(is_admin())
@@ -45,6 +46,7 @@ add_action( 'wp_enqueue_scripts', 'aheadzen_scripts_method' );
 add_shortcode('SociaPlugin', 'aheadzen_social_plugin_shortcode');
 add_filter('template_include','aheadzen_social_template_include');
 
+
 function aheadzen_scripts_method() {
 	global $social_plugin_dir_url;
 	wp_enqueue_script('popupwindow',$social_plugin_dir_url.'/js/jquery.popupwindow.js',array( 'jquery' ));
@@ -55,8 +57,42 @@ function aheadzen_social_template_include($template)
 {
 	$google = new AheadzenGoogle();
 	$fb = new AheadzenFacebook();
+	$eml = new AheadzenEmail();	
 	
-	if($_POST && $_POST['google_send_invitations'] && $_POST['invitor_name'] && ($_POST['check'] || $_POST['invite_emls']))
+	if($_POST && $_POST['eml_send_invitations'] && $_POST['invite_emls'])
+	{
+		$emls_arr = explode(',',$_POST['invite_emls']);
+		$validate_eml_arr = array();
+		if($emls_arr)
+		{
+			for($e=0;$e<count($emls_arr);$e++)
+			{
+				$the_eml = trim($emls_arr[$e]);
+				if (filter_var($the_eml, FILTER_VALIDATE_EMAIL))
+				{
+					$validate_eml_arr[] = $the_eml;
+				}				
+			}
+			if($validate_eml_arr)
+			{
+				$args = array();
+				$args['check'] = $validate_eml_arr;
+				$args['subject'] = $_POST['subject'];
+				$args['message'] = $_POST['message'];
+				aheadzen_invitor_send_email($args);
+				AheadDB::insert_social_contact_eml($validate_eml_arr); //insert data in to db
+				
+			}
+			
+		}
+		echo '<h2>'.__('Invitations sent successfully...','aheadzen').'</h2><br /><br />';
+		echo '<script>
+		setTimeout(function(){ window.close(); }, 3000);
+		</script>';
+		exit;
+		exit;
+	}
+	elseif($_POST && $_POST['google_send_invitations'] && $_POST['invitor_name'] && ($_POST['check'] || $_POST['invite_emls']))
 	{
 		aheadzen_invitor_send_email($_POST);
 		echo '<h2>'.__('Invitations sent successfully...','aheadzen').'</h2><br /><br />';
@@ -79,6 +115,8 @@ function aheadzen_social_template_include($template)
 			$google->loginBegin();exit;
 		}elseif($_GET['get_contact']=='facebook'){
 			$fb->fb_friend_list();exit;
+		}elseif($_GET['get_contact']=='email'){
+			$eml->sendUserEmailInvitation();exit;
 		}
 	}	
 	return $template;
@@ -128,13 +166,43 @@ function aheadzen_invitor_send_email($args)
 
 function aheadzen_social_head_functions()
 {
+	global $social_plugin_dir_url;
 ?>
+	<?php /*?>
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+	<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+	<script>
+	var the_iframe_url = '';
+	jQuery(function() {
+	jQuery( "#social_360_dialog" ).dialog({
+		autoOpen: false,
+		modal: true,
+		open: function(ev, ui){
+		  jQuery('#social_360Iframe').attr('src',the_iframe_url);
+		 },
+		show: {
+		effect: "blind",
+		duration: 1000
+		},
+		hide: {
+		effect: "explode",
+		duration: 1000
+		}
+	});
+	jQuery( ".popupwindow" ).click(function(e) {
+		the_iframe_url = jQuery(this).attr("href");
+		jQuery( "#social_360_dialog" ).dialog( "open" );
+		return false;
+		});
+	});
+	</script>
+	<?php */?>
 	<script type="text/javascript">
 	var profiles =
 	{
 		windowCallUnload:
 		{
-			height:650,
+			height:620,
 			width:650,
 			center:1,
 			scrollbars:1,
@@ -149,6 +217,16 @@ function aheadzen_social_head_functions()
    		jQuery(".popupwindow").popupwindow(profiles);
    	});
 	</script>
+
+	<style>
+	ul.social_360_front{text-align: center;}
+	ul.social_360_front li{list-style:none; margin:0 5px;display: inline-block;}
+	ul.social_360_front li a{color: #FFF;font-size: 44px;text-decoration: none;z-index: 2;display:block;padding:10px 15px;}
+	.social_360_front .socialfb{background-color: #3b5998;}
+	.social_360_front .socialgp {background-color: #ca3f2f;}
+	.social_360_front .socialtwitter {background-color: #7cd2f2;}
+	.social_360_front .socialeml {background-color: #744848;}
+	</style>
 <?php
 }
 
@@ -161,20 +239,27 @@ function aheadzen_social_plugin_shortcode($atts) {
 	$google = intval($atts['google']);
 	$facebook = intval($atts['facebook']);
 	$twitter = intval($atts['twitter']);
-	$content = '<ul>';
+	$email = intval($atts['email']);
+	
+	$content = '<ul class="social_360_front">';
 	if($google){
-		$content .= '<li><a href="'.site_url('/?get_contact=google').'" class="popupwindow" rel="windowCallUnload">Get Google Contacts</a></li>';
+		$content .= '<li><a href="'.site_url('/?get_contact=google').'" class="popupwindow socialgp" rel="windowCallUnload"><i class="wsiicon-google"></i></a></li>';
 	}
 	if($facebook)
 	{
-		$fb = new Facebook();
+		$fb = new AheadzenFacebook();
 		$inviter_url = $fb->inviter_url();
-		$content .= '<li><a href="'.$inviter_url.'" class="popupwindow" rel="windowCallUnload">Facebook Invite Friends</a></li>';
+		$content .= '<li><a href="'.$inviter_url.'" class="popupwindow socialfb" rel="windowCallUnload"><i class="wsiicon-facebook"></i></a></li>';
 	}
 	if($twitter)
 	{
-		$content .= '<li><a href="'.site_url('/?get_contact=twitter').'" class="popupwindow" rel="windowCallUnload">Twitter Followers</a></li>';
+		$content .= '<li><a href="'.site_url('/?get_contact=twitter').'" class="popupwindow socialtwitter" rel="windowCallUnload"><i class="wsiicon-twitter"></i></a></li>';
+	}
+	if($email)
+	{
+		$content .= '<li><a href="'.site_url('/?get_contact=email').'" class="popupwindow socialeml" rel="windowCallUnload"><i class="wsiicon-mail"></i></a></li>';
 	}
 	$content .= '</ul>';
+	
 	return $content;
 }

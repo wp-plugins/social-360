@@ -89,8 +89,8 @@ class SocialAdminClass {
 				<br /><?php _e('The "Redirect URIs" should be like: http://YOURSITENAME.COM/<u>?hauth.done=Google</u>','aheadzen');?>
 				</td></tr>
 				
-				<tr><td><h3><?php _e('Default HTML Message for emails.','aheadzen');?></h3>
-				<br /><b><?php _e('email settings applied for google settings','aheadzen');?></b></td></tr>
+				<tr><td><h3><?php _e('Default HTML Message for emails','aheadzen');?></h3>
+				<br /><b style="color:brown;"><?php _e('Email details for GOOGLE & EMAIL Invitation settings.','aheadzen');?></b></td></tr>
 				<tr valign="top">
 					<td>
 					<?php $aheadzen_invitation_subject = get_option('aheadzen_invitation_subject');

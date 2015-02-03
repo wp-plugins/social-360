@@ -31,8 +31,9 @@ For twitter and facebook the invitation will be sent by message while in google 
 <li>For Google : [SociaPlugin google=1]</li>
 <li>For Facebook : [SociaPlugin facebook=1]</li>
 <li>For Twitter : [SociaPlugin twitter=1]</li>
+<li>For Email : [SociaPlugin email=1]</li>
 <li>For Google & Facebook : [SociaPlugin google=1 facebook=1]</li>
-<li>For Google & Facebook & Twitter : [SociaPlugin google=1 facebook=1 twitter=1]</li>
+<li>For Google & Facebook & Twitter & Email : [SociaPlugin google=1 facebook=1 twitter=1 email=1]</li>
 </ul>
 
 
@@ -52,5 +53,10 @@ For twitter and facebook the invitation will be sent by message while in google 
 
 == Changelog ==
 
-= 1.0.0.0 =
+= 1.0.0 =
 * Fresh Public Release.
+
+= 1.0.1
+* Added social icons for interface
+* Added friend invitation OR direct email invitation section.
+

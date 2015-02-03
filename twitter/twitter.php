@@ -140,7 +140,7 @@ function aheadzen_twitter_followers()
 	?>
 	</ul>
 	</div>
-	<div class="send_invite_list">
+	<div class="send_invite_list" style="text-align: right">
 	<input type="submit" id="submit-button" value="SEND">
 	</div>
 	<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
